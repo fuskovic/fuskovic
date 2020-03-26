@@ -1,38 +1,32 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
-	"gopkg.in/yaml.v2"
+	"github.com/fuskovic/gophercises/urlshortener/store"
 )
 
-// Route stores a path and it's respective URL
-type Route struct {
-	Path string
-	URL  string
-}
-
-// YamlObject is a wrapper for the yaml data
-type YamlObject struct {
-	Routes []Route `yaml:"paths"`
-	AsMap  map[string]string
-}
+type (
+	// Route stores a path and it's respective URL
+	Route struct {
+		Path string
+		URL  string
+	}
+	// Object is a wrapper for yaml and json data
+	Object struct {
+		Routes []Route `yaml:"paths" json:"paths"`
+		AsMap  map[string]string
+	}
+)
 
 // Map converts routes to a map
-func (y *YamlObject) Map() map[string]string {
-	y.AsMap = make(map[string]string)
-	for _, route := range y.Routes {
-		y.AsMap[route.Path] = route.URL
+func (o *Object) Map() map[string]string {
+	o.AsMap = make(map[string]string)
+	for _, route := range o.Routes {
+		o.AsMap[route.Path] = route.URL
 	}
-	return y.AsMap
-}
-
-func parseYAML(yml []byte) (map[string]string, error) {
-	var y YamlObject
-	if err := yaml.Unmarshal(yml, &y.Routes); err != nil {
-		return y.AsMap, err
-	}
-	return y.Map(), nil
+	return o.AsMap
 }
 
 // MapHandler handles requests requests by finding urls for a given path
@@ -47,13 +41,12 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 	}
 }
 
-// YAMLHandler handles requests by checking the yaml config for a url belonging to a path.
-func YAMLHandler(yml []byte, fallback http.Handler) (http.HandlerFunc, error) {
-	fb := func(w http.ResponseWriter, r *http.Request) { fallback.ServeHTTP(w, r) }
+// ByteDataHandler is a wrapper for the map handler
+func ByteDataHandler(m map[string]string, fallback http.Handler) http.HandlerFunc {
+	return MapHandler(m, fallback)
+}
 
-	m, err := parseYAML(yml)
-	if err != nil {
-		return fb, err
-	}
-	return MapHandler(m, fallback), nil
+// DbHandler is a wrapper for the stores handler method
+func DbHandler(ctx context.Context, s store.Store, fallback http.Handler) http.HandlerFunc {
+	return s.Handler(ctx, fallback)
 }

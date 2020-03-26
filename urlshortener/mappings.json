@@ -1,0 +1,18 @@
+{
+    "paths" : [{
+        "path":"/linkedin",
+        "url": "https://www.linkedin.com/in/faris-huskovic/"
+    },
+    {
+        "path":"/github",
+        "url": "https://github.com/fuskovic"
+    },
+    {
+        "path":"/db-linkedin",
+        "url": "https://www.linkedin.com/in/faris-huskovic/"
+    },
+    {
+        "path":"/db-github",
+        "url": "https://github.com/fuskovic"
+    }]
+}

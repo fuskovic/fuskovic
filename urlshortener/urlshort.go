@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,10 +14,17 @@ import (
 const (
 	addr     = ":8080"
 	notFound = "https://9gag.com/404"
-	config   = "mappings.yaml"
 )
 
-var fb fallback
+var (
+	fb     fallback
+	config = "mappings.yaml"
+)
+
+func init() {
+	flag.StringVar(&config, "config", config, "path to yaml file")
+	flag.Parse()
+}
 
 type fallback http.HandlerFunc
 
@@ -36,6 +44,7 @@ func main() {
 		os.Exit(1)
 	}
 
+	fmt.Printf("url shortener started on %s", addr)
 	http.HandleFunc("/linkedin", yh)
 	http.HandleFunc("/github", yh)
 	http.ListenAndServe(addr, nil)

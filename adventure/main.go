@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -41,12 +43,16 @@ type (
 )
 
 var (
+	arcToStartOn = "intro"
 	adventureCfg = "gopher.json"
+	toStdOut     bool
 	chapterFiles []string
 )
 
 func init() {
 	flag.StringVar(&adventureCfg, "story-config", adventureCfg, "path to json config for the adventure")
+	flag.BoolVar(&toStdOut, "to-std-out", false, "print adventure to stdout vs the browser")
+	flag.StringVar(&arcToStartOn, "start-on", arcToStartOn, "choose which part of the story you want to start on")
 	flag.Parse()
 
 	wd, err := os.Getwd()
@@ -60,6 +66,40 @@ func init() {
 		filepath.Join(pagesDir, "index.html"),
 		filepath.Join(pagesDir, "chapter.html"),
 	)
+}
+
+func (a Adventure) run() {
+	currentArc, ok := a[arcToStartOn]
+	if !ok {
+		log.Fatalf("arc to start on : %s does not exist", arcToStartOn)
+	}
+
+	scanner := bufio.NewScanner(os.Stdin)
+	for currentArc.Title != a["home"].Title {
+		fmt.Println()
+		for _, line := range currentArc.Stories {
+			fmt.Println(line)
+		}
+
+		fmt.Println(`
+		select an option using the option number
+		`)
+
+		for i, option := range currentArc.Options {
+			opt := fmt.Sprintf("option number %d : %s\n", i, option.Text)
+			fmt.Println(opt)
+		}
+
+		for scanner.Scan() {
+			input, err := strconv.Atoi(scanner.Text())
+			if err != nil {
+				fmt.Printf("failed to evaluate input : %s\n", err.Error())
+			}
+			currentArc = a[currentArc.Options[input].Arc]
+			break
+		}
+	}
+	fmt.Println("adventure complete!")
 }
 
 func chapterHandler(a Arc) http.HandlerFunc {
@@ -102,6 +142,10 @@ func main() {
 		log.Fatalf("failed to unmarshal json : %s\n", err.Error())
 	}
 
-	fmt.Printf("starting adventure on %s\n", addr)
-	http.ListenAndServe(addr, buildAdventureRouter(adventure))
+	if !toStdOut {
+		fmt.Printf("starting adventure on %s\n", addr)
+		http.ListenAndServe(addr, buildAdventureRouter(adventure))
+	} else {
+		adventure.run()
+	}
 }

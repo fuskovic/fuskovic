@@ -1,0 +1,12 @@
+{{define "main"}}
+<h1>{{.Title}}</h1>
+    {{range .Stories}}
+        <p>{{.}}</p>
+    {{end}}
+    {{if .Options }}
+    <h2>Choose an option</h2>
+        {{range .Options}}
+            <a href='/{{.Arc}}'>{{.Text}}</p>
+        {{end}}
+    {{end}}
+{{end}}

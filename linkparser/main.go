@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 
 	"github.com/fuskovic/gophercises/linkparser/linx"
@@ -11,7 +12,11 @@ var htmlFiles = []string{"ex1.html", "ex2.html", "ex3.html", "ex4.html"}
 
 func main() {
 	for _, f := range htmlFiles {
-		links, err := linx.GetLinks(f)
+		data, err := ioutil.ReadFile(f)
+		if err != nil {
+			log.Fatalf("failed to read %s : %s\n", f, err)
+		}
+		links, err := linx.GetLinks(data)
 		if err != nil {
 			log.Fatalf("failed to get links : %s\n", err.Error())
 		}

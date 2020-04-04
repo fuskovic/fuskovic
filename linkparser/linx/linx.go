@@ -1,7 +1,7 @@
 package linx
 
 import (
-	"os"
+	"bytes"
 	"strings"
 	"unicode"
 
@@ -39,20 +39,14 @@ func (l *Link) setText(nodes []html.Node) {
 }
 
 // GetLinks returns all non-link-nested links for a html file path.
-func GetLinks(path string) (Links, error) {
+func GetLinks(data []byte) (Links, error) {
 	var (
 		link       Link
 		links      Links
 		linkParser parseFunc
 	)
 
-	file, err := os.Open(path)
-	if err != nil {
-		return links, err
-	}
-	defer file.Close()
-
-	doc, err := html.Parse(file)
+	doc, err := html.Parse(bytes.NewReader(data))
 	if err != nil {
 		return links, err
 	}

@@ -1,6 +1,7 @@
 package linx
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -71,7 +72,12 @@ func TestLinkParser(t *testing.T) {
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			links, err := GetLinks(test.path)
+			data, err := ioutil.ReadFile(test.path)
+			if err != nil {
+				t.Errorf("failed to read %s\nerror : %s\n", test.path, err)
+			}
+
+			links, err := GetLinks(data)
 			if err != nil {
 				t.Errorf("failed to get links for %s\nerror : %s\n", test.path, err.Error())
 			}

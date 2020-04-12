@@ -8,22 +8,10 @@ import (
 // SortFunc describes the method signature for a functional option that can be passed to Sort.
 type SortFunc func(deck Deck) Deck
 
-func (d Deck) Len() int {
-	return len(d)
-}
-
-func (d Deck) Less(i, j int) bool {
-	return d[i].Rank < d[j].Rank
-}
-
-func (d Deck) Swap(i, j int) {
-	d[i], d[j] = d[j], d[i]
-}
-
 // Shuffle rearranges a deck of cards in a random order.
 var Shuffle SortFunc = func(d Deck) Deck {
 	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(d), func(i int, j int) { d.Swap(i, j) })
+	rand.Shuffle(d.Len(), func(i int, j int) { d.Swap(i, j) })
 	return d
 }
 
@@ -40,8 +28,8 @@ func AddJokers(numJokersToAdd int, cards Deck) SortFunc {
 	return func(d Deck) Deck {
 		for i := 1; i < numJokersToAdd; i++ {
 			d = append(d, Card{
-				Rank: Joker,
-				Suit: "Joker",
+				Value: "Joker",
+				Suit:  "Joker",
 			})
 		}
 		return d
@@ -49,16 +37,15 @@ func AddJokers(numJokersToAdd int, cards Deck) SortFunc {
 }
 
 // FilterByRank returns a SortFunc that removes all cards from a deck for all given ranks.
-func FilterByRank(d Deck, ranks ...Rank) SortFunc {
-	return func(d Deck) Deck {
-		var filtered Deck
+func FilterByRank(d Deck, ranks ...string) SortFunc {
+	return func(d Deck) (filtered Deck) {
 		counts := make(map[Card]int)
 
 		for _, r := range ranks {
 			for _, card := range d {
 				counts[card]++
 
-				if card.Rank == r {
+				if card.Value == r {
 					continue
 				}
 
@@ -67,7 +54,7 @@ func FilterByRank(d Deck, ranks ...Rank) SortFunc {
 				}
 			}
 		}
-		return filtered
+		return
 	}
 }
 

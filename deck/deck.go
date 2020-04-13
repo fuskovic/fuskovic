@@ -27,7 +27,7 @@ type (
 	Card struct{ Value, Suit string }
 
 	// Deck implements the sort pkgs Interface interface for a slice of playing cards.
-	Deck []Card
+	Deck []*Card
 )
 
 // New initializes a new deck.
@@ -38,49 +38,51 @@ func New() *Deck {
 			if name == "Joker" {
 				continue
 			}
-			deck = append(deck, Card{
+			deck = append(deck, &Card{
 				Value: name,
 				Suit:  suit,
 			})
 		}
 	}
-	deck = Shuffle(deck)
-	return &deck
+	return Shuffle(&deck)
 }
 
+// Len returns the number of cards in the deck.
 func (d *Deck) Len() int {
 	return len(*d)
 }
 
-func (d Deck) Swap(i, j int) {
-	d[i], d[j] = d[j], d[i]
+// Swap replaces the positions of two cards by the indices provided.
+func (d *Deck) Swap(i, j int) {
+	deck := *d
+	deck[i], deck[j] = deck[j], deck[i]
+	*d = deck
 }
 
-// Draw removes a card from the deck, returning the removed card and the deck with the card removed.
-func (d *Deck) Draw() (Card, *Deck) {
-	deckCopy := *d
-	lastCard := deckCopy[d.Len()-1]
-	updatedDeck := d.RemoveCard(lastCard)
-	return lastCard, &updatedDeck
+// Draw removes the last card from the deck and returns it.
+func (d *Deck) Draw() (*Card) {
+	lastCard := d.GetCard(d.Len()-1)
+	d.RemoveCard(lastCard)
+	return lastCard
 }
 
 // RemoveCard removes a card from the deck.
-func (d *Deck) RemoveCard(c Card) (new Deck) {
+func (d *Deck) RemoveCard(c *Card) {
+	var new Deck	
 	for _, card := range *d {
-		if card == c {
-			continue
+		if card != c {
+			new = append(new, card)	
 		}
-		new = append(new, card)
 	}
-	return
+	*d = new
 }
 
-// GetCardIndez returns the position of a particular card in the deck.
-func (d *Deck) GetCardIndex(c Card) (cardIndex int) {
-	for i, card := range *d {
-		if card == c {
-			cardIndex = i
+// GetCard returns a card from the deck by its index without removing it from the deck.
+func (d *Deck) GetCard(index int) *Card {
+	for i, c := range *d {
+		if i == index {
+			return c
 		}
 	}
-	return
+	return nil
 }

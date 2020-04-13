@@ -2,64 +2,54 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/fuskovic/gophercises/deck"
 )
 
 type (
-	Player struct {
-		Name  string
-		Score uint
-		Hand  []deck.Card
+	player struct {
+		name                string
+		score, wins, losses uint
+		//bet uint
+		hand []*deck.Card
 	}
-	Players []Player
+	players []*player
 )
 
-func (p *Player) getAutomatedInput() int {
-	if p.Score <= 16 || p.Score == 17 && p.HasAce() {
+func (p *player) hit(newCard *deck.Card) {
+	fmt.Printf("%s hit a %s of %s\n", p.name, newCard.Value, newCard.Suit)
+
+	p.hand = append(p.hand, newCard)
+
+	handleAce := func() {
+		if p.score < 22 && (p.score+11) < 22 {
+			p.score += 11
+		} else if p.score < 22 && (p.score+11) > 21 {
+			p.score += 1
+		}
+	}
+
+	if newCard.Value == "Ace" {
+		handleAce()
+	} else {
+		p.score += uint(deck.CardMap[newCard.Value])
+	}
+
+	fmt.Printf("%s's score : %d\n", p.name, p.score)
+}
+
+func (p *player) getAutomatedInput() int {
+	if p.score <= 16 || p.score == 17 && p.hasAce() {
 		return hit
 	}
 	return stand
 }
 
-func (p *Player) Hit(newCard deck.Card) Player {
-	p.Hand = append(p.Hand, newCard)
-
-	handleAce := func() {
-		if p.Score < 22 && (p.Score+11) < 22 {
-			p.Score += 11
-		} else if p.Score < 22 && (p.Score+11) > 21 {
-			p.Score += 1
-		}
-	}
-
-	fmt.Printf("%s hit a %s of %s\n", p.Name, newCard.Value, newCard.Suit)
-
-	if newCard.Value == "Ace" {
-		handleAce()
-	} else {
-		p.Score += uint(deck.CardMap[newCard.Value])
-	}
-
-	if p.Score == 21 {
-		log.Fatalf("%s got 21, %s WINS!", p.Name, p.Name)
-	}
-
-	return *p
-}
-
-// HasAce evaluates whether or not the players hand contains an Ace.
-func (p *Player) HasAce() bool {
-	for _, card := range p.Hand {
+func (p *player) hasAce() bool {
+	for _, card := range p.hand {
 		if card.Value == "Ace" {
 			return true
 		}
 	}
 	return false
-}
-
-// Busted evaluates whether or not a player has busted.
-func (p *Player) Busted() bool {
-	return p.Score > 21
 }
